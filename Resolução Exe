@@ -1,0 +1,183 @@
+class Program
+    {
+
+       
+            class Produto
+            {
+                public string nome { get; set; }
+                public string codigoDeBarras { get; set; }
+                public int quantidade { get; set; }
+                public decimal precoUnitario { get; set; }
+                public DateTime dataDeValidade { get; set; }
+            }
+
+            static List<Produto> estoque = new List<Produto>();
+
+            static void Main(string[] args)
+            {
+                while (true)
+                {
+                    Console.WriteLine("Sistema de Gerenciamento de Estoque");
+                    Console.WriteLine("1. Adicionar Produto");
+                    Console.WriteLine("2. Atualizar Produto");
+                    Console.WriteLine("3. Remover Produto");
+                    Console.WriteLine("4. Pesquisar Produto");
+                    Console.WriteLine("5. Calcular Valor Total do Estoque");
+                    Console.WriteLine("6. Gerar Relatório de Produtos Prestes a Vencer");
+                    Console.WriteLine("7. Sair");
+
+                    int escolha = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Escolha uma opção: ");
+
+                    switch (escolha)
+                    {
+                        case 1:
+                            AdicionarProduto();
+                            break;
+                        case 2:
+                            AtualizarProduto();
+                            break;
+                        case 3:
+                            RemoverProduto();
+                            break;
+                        case 4:
+                            PesquisarProduto();
+                            break;
+                        case 5:
+                            CalcularValorTotal();
+                            break;
+                        case 6:
+                            GerarRelatorioValidade();
+                            break;
+                        case 7:
+                            Environment.Exit(0);
+                            break;
+                        default:
+                            Console.WriteLine("Opção inválida. Tente novamente.");
+                            break;
+                    }
+                }
+            }
+
+            static void AdicionarProduto()
+            {
+                Produto novoProduto = new Produto();
+                Console.WriteLine("Digite o nome do Produto: ");
+                novoProduto.nome = Console.ReadLine();
+                Console.WriteLine("Digite seu código de Barras: ");
+                novoProduto.codigoDeBarras = Console.ReadLine();
+                Console.WriteLine("Digite a quantidade: ");
+                novoProduto.quantidade = int.Parse(Console.ReadLine());
+                Console.WriteLine("Valor unitário: ");
+                novoProduto.precoUnitario = decimal.Parse(Console.ReadLine());
+                Console.WriteLine("Data de Validade (dd/mm/aaaa): ");
+                novoProduto.dataDeValidade = DateTime.Parse(Console.ReadLine());
+
+                estoque.Add(novoProduto);
+                Console.WriteLine("Produto adicionado com sucesso!");
+            }
+
+            static void AtualizarProduto()
+            {
+                Console.WriteLine("Digite o Código de Barras do Produto que devera ser atualizado: ");
+                string codigoDeBarras = Console.ReadLine();
+                Produto produtoExistente = estoque.FirstOrDefault(p => p.codigoDeBarras == codigoDeBarras);
+
+                if (produtoExistente != null)
+                {
+                    Console.WriteLine("Informações atuais do produto:");
+                    Console.WriteLine($"Nome: {produtoExistente.nome}\nQuantidade: {produtoExistente.quantidade}\nPreço Unitário: {produtoExistente.precoUnitario:C}\nData de Validade: {produtoExistente.dataDeValidade.ToShortDateString()}");
+
+                    Console.Write("Novo Nome do Produto: ");
+                    produtoExistente.nome = Console.ReadLine();
+                    Console.Write("Nova Quantidade: ");
+                    produtoExistente.quantidade = int.Parse(Console.ReadLine());
+                    Console.Write("Novo valor Unitário: ");
+                    produtoExistente.precoUnitario = decimal.Parse(Console.ReadLine());
+                    Console.Write("Nova Data de Validade (dd/mm/aaaa): ");
+                    produtoExistente.dataDeValidade = DateTime.Parse(Console.ReadLine());
+
+                    Console.WriteLine("Produto atualizado com sucesso!");
+                }
+                else
+                {
+                    Console.WriteLine("Produto não encontrado no estoque.");
+                }
+            }
+
+            static void RemoverProduto()
+            {
+                Console.WriteLine("Digite o Código de Barras do Produto a ser removido: ");
+                string codigoDeBarras = Console.ReadLine();
+                Produto produtoARemover = estoque.FirstOrDefault(p => p.codigoDeBarras == codigoDeBarras);
+
+                if (produtoARemover != null)
+                {
+                    estoque.Remove(produtoARemover);
+                    Console.WriteLine("Produto removido com sucesso!");
+                }
+                else
+                {
+                    Console.WriteLine("Produto não encontrado no estoque.");
+                }
+            }
+            static void PesquisarProduto()
+            {
+                Console.WriteLine("Digite o Nome, Código de Barras ou Data de Validade (dd/mm/aaaa) do Produto a ser pesquisado: ");
+                string termoPesquisa = Console.ReadLine();
+
+                termoPesquisa = termoPesquisa.ToLower();
+
+                var produtosEncontrados = estoque.Where(p =>
+                    p.nome.ToLower().Contains(termoPesquisa) ||
+                    p.codigoDeBarras == termoPesquisa ||
+                    p.dataDeValidade.Date == DateTime.ParseExact(termoPesquisa, "dd/MM/yyyy", null)
+                ).ToList();
+
+                if (produtosEncontrados.Count > 0)
+                {
+                    Console.WriteLine("Produtos encontrados:");
+                    foreach (var produto in produtosEncontrados)
+                    {
+                        Console.WriteLine($"Nome: {produto.nome}\nCódigo de Barras: {produto.codigoDeBarras}\nQuantidade: {produto.quantidade}\nPreço Unitário: {produto.precoUnitario:C}\nData de Validade: {produto.dataDeValidade.ToShortDateString()}");
+                        Console.WriteLine("------------");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Nenhum produto encontrado na pesquisa.");
+                }
+            }
+
+            static void CalcularValorTotal()
+            {
+                decimal valorTotal = estoque.Sum(p => p.quantidade * p.precoUnitario);
+                Console.WriteLine($"O valor total do estoque é: {valorTotal:C}");
+            }
+
+            static void GerarRelatorioValidade()
+            {
+                DateTime dataAtual = DateTime.Now;
+                Console.WriteLine(("Digite o número de dias limite para vencimento: "));
+
+                int diasLimite = int.Parse(Console.ReadLine());
+                DateTime dataLimite = dataAtual.AddDays(diasLimite);
+
+                var produtosPrestesAVencer = estoque.Where(p => p.dataDeValidade >= dataAtual && p.dataDeValidade <= dataLimite).ToList();
+
+                if (produtosPrestesAVencer.Count > 0)
+                {
+                    Console.WriteLine("Produtos prestes a vencer:");
+                    foreach (var produto in produtosPrestesAVencer)
+                    {
+                        Console.WriteLine($"Nome: {produto.nome}\nCódigo de Barras: {produto.codigoDeBarras}\nQuantidade: {produto.quantidade}\nPreço Unitário: {produto.precoUnitario:C}\nData de Validade: {produto.dataDeValidade.ToShortDateString()}");
+                        Console.WriteLine("------------");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Nenhum produto prestes a vencer.");
+                }
+            }
+        }
+    }
